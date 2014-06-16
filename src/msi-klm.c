@@ -34,7 +34,6 @@ int getRegionInfo(char *colour_data, tRegionInfoPtr regionPtr)
   char *colour = NULL;
   char *intensity = NULL;
   char *delim = ",:";
-  char *buff;
 
   // The default values;
   regionPtr->colour = 0;      // off
@@ -46,12 +45,12 @@ int getRegionInfo(char *colour_data, tRegionInfoPtr regionPtr)
     intensity = strtok(NULL, delim);
   }
   else
-    return 0;
+    return 1;
 
   /*
    * off : 0
    * "red": 1,
-   * "orange": 2,
+   *   "orange": 2,
    * "yellow": 3,
    * "green": 4,
    * "sky": 5,
@@ -98,9 +97,9 @@ int getRegionInfo(char *colour_data, tRegionInfoPtr regionPtr)
 
   /*
    * "light": 3,
-   * "low": 2,
+   * "low": 0,
    * "med": 1,
-   * "high": 0
+   * "high": 2
   */
 
   if (intensity != NULL)
@@ -111,13 +110,13 @@ int getRegionInfo(char *colour_data, tRegionInfoPtr regionPtr)
         if (strcmp(intensity, "light") == 0)
           regionPtr->intensity = 3;
         else if (strcmp(intensity, "low") == 0)
-          regionPtr->intensity = 2;
+          regionPtr->intensity = 0;
         break;
       case 'm':
         regionPtr->intensity = 1;
         break;
       default:
-        regionPtr->intensity = 0;
+        regionPtr->intensity = 2;
         break;
     }
   }
@@ -138,7 +137,9 @@ void cleanupExit(hid_device *handle, int8_t retval)
 
 int setMode(hid_device *handle, uint8_t mode)
 {
-  uint8_t report[8];
+  uint8_t report[32];
+
+  memset(report, 0, 32);
 
   report[0] = 1;
   report[1] = 2;
@@ -149,13 +150,15 @@ int setMode(hid_device *handle, uint8_t mode)
   report[6] = 0;
   report[7] = 236; // EOR
 
-  return hid_send_feature_report(handle, report, sizeof(report));
+  return hid_send_feature_report(handle, report, 17);
 }
 
 
 int setRegion(hid_device *handle, tRegionInfoPtr regionPtr)
 {
-  uint8_t report[8];
+  uint8_t report[32];
+
+  memset(report, 0, 32);
 
   // header
   report[0] = 1;
@@ -167,7 +170,7 @@ int setRegion(hid_device *handle, tRegionInfoPtr regionPtr)
   report[6] = 0;
   report[7] = 236;  // EOR (end of request)
 
-  return hid_send_feature_report(handle, report, sizeof(report));
+  return hid_send_feature_report(handle, report, 17);
 }
 
 
